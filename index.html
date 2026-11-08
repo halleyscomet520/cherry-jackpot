@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cherry Jackpot Invitation Game</title>
+  <meta name="description" content="Play the Cherry Jackpot invitation slot machine.">
+<style>
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:transparent;width:100%;height:auto;}
+    body{font-family:Georgia,"Times New Roman",serif;overflow-x:hidden}
+    .jackpot{width:100%;max-width:820px;margin:0 auto;}
+    .machine{width:100%;position:relative;aspect-ratio:1200/1310;isolation:isolate;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+    .machine-art{width:100%;height:100%;display:block;pointer-events:none;}
+    .reel{position:absolute;top:39.45%;height:23.9%;border-radius:5% / 4%;overflow:hidden;display:flex;align-items:center;justify-content:center;
+       background:radial-gradient(ellipse at 50% 45%,#fff8e8 0%,#ffefce 66%,#d5ac7d 100%);
+       box-shadow:inset 0 10px 19px rgba(102,59,24,.20),inset 0 -10px 15px rgba(93,44,25,.17);z-index:2;opacity:0;transition:opacity .1s ease;}
+    .reel-1{left:20.15%;width:17.1%}
+    .reel-2{left:39.03%;width:16.95%}
+    .reel-3{left:57.72%;width:16.7%}
+    .reel-symbol{width:95%;height:80%;display:flex;align-items:center;justify-content:center;transform:translateZ(0)}
+    .reel-symbol svg{width:100%;height:auto;max-height:100%;display:block}
+    .symbol-alt{font-size:clamp(20px,9vw,68px);line-height:1;color:#a81833;text-shadow:1px 2px #fff4de,2px 3px #c48a39;font-weight:700}
+    .machine.spinning .reel{opacity:1;}
+    .machine.spinning .reel-symbol{animation:roll .13s linear infinite;filter:blur(2.7px)}
+    @keyframes roll{0%{transform:translateY(-13%) scaleY(1.17)}50%{transform:translateY(12%) scaleY(.94)}100%{transform:translateY(-13%) scaleY(1.17)}}
+    .lever-button{position:absolute;left:79.1%;top:26.65%;width:16.9%;height:35.55%;padding:0;border:0;background:transparent;
+       cursor:grab;touch-action:none;z-index:5;-webkit-tap-highlight-color:transparent;}
+    .lever-button:active{cursor:grabbing}
+    .lever-button:focus-visible{outline:3px solid #fff1b7;outline-offset:1px;border-radius:18px}
+    .lever-svg{width:100%;height:100%;overflow:visible;pointer-events:none;display:block}
+    /* A straight-down pull: the shaft telescopes toward its fixed base while the grip travels vertically. */
+    .lever-shaft{transform-box:view-box;transform-origin:104px 381px;}
+    .lever-grip{transform-box:view-box;}
+    .machine.pulling .lever-shaft{animation:leverShaft .94s cubic-bezier(.22,.7,.23,1) both}
+    .machine.pulling .lever-grip{animation:leverGrip .94s cubic-bezier(.22,.7,.23,1) both}
+    @keyframes leverShaft{0%{transform:scaleY(1)}35%{transform:scaleY(.36)}52%{transform:scaleY(.36)}100%{transform:scaleY(1)}}
+    @keyframes leverGrip{0%{transform:translateY(0)}35%{transform:translateY(166px)}52%{transform:translateY(166px)}100%{transform:translateY(0)}}
+    .win-panel{position:absolute;left:19.8%;top:39.0%;width:55.9%;height:24.9%;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:radial-gradient(ellipse at center,#fffaf0 20%,#f9eccf 68%,#d7b88b 100%);
+      border:clamp(1px,.22vw,3px) solid #bb8f4b;border-radius:3.5%;box-shadow:inset 0 0 0 3px #fef5df,inset 0 9px 18px #a4723925;
+      opacity:0;visibility:hidden;transform:scale(.95);transition:opacity .34s ease,transform .36s ease,visibility .36s;pointer-events:none;}
+    .machine.won .win-panel{visibility:visible;opacity:1;transform:scale(1)}
+    .win-small{font:700 clamp(7px,1.5vw,17px)/1.1 Arial,sans-serif;letter-spacing:.32em;color:#ad834f;margin-bottom:2.3%;}
+    .win-headline{font-family:Georgia,serif;font-weight:800;font-size:clamp(16px,5.9vw,64px);line-height:1.1;letter-spacing:-.027em;
+       color:#8b1029;text-align:center;text-shadow:1px 2px #fff5df,2px 4px #deb980;}
+    .win-headline span{display:block}
+    .win-ornament{font-size:clamp(8px,1.7vw,17px);letter-spacing:.6em;color:#b48d53;margin-top:2.5%;}
+    .machine.won .win-panel .win-headline{animation:winPop .5s cubic-bezier(.18,1.4,.4,1) .08s both}
+    @keyframes winPop{from{opacity:.3;transform:scale(.84)}to{opacity:1;transform:scale(1)}}
+    .confetti{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;opacity:0;}
+    .machine.won .confetti{animation:glowFlash .8s ease-out both}
+    @keyframes glowFlash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+    .twinkle{position:absolute;color:#ffe9ac;font-size:clamp(12px,3.3vw,27px);text-shadow:0 0 7px #fffded;}
+    .twinkle:nth-child(1){left:16%;top:40%}.twinkle:nth-child(2){left:80%;top:41%}
+    .twinkle:nth-child(3){left:13%;top:61%}.twinkle:nth-child(4){left:78%;top:61%}
+    .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+    @media(prefers-reduced-motion:reduce){.machine.spinning .reel-symbol{animation:none;filter:none}.machine.pulling .lever-shaft,.machine.pulling .lever-grip{animation:none}.machine.won .win-panel .win-headline{animation:none}}
+  
+    .missing-art { position:absolute;inset:12% 17%;z-index:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:10%;color:#7d1730;background:#fff7e8;border:2px dashed #c8a477;border-radius:12px;font:600 16px/1.5 Georgia,serif; }
+    .missing-art b {font-weight:800;}
+
+    /* After the first invitation reveal, the reels remain visible for each replay result. */
+    .machine.result-mode .reel{opacity:1;}
+    .machine.result-mode .reel-symbol{animation:landResult .28s cubic-bezier(.2,1.4,.3,1) both;filter:none;}
+    .machine.result-mode .reel-2 .reel-symbol{animation-delay:.08s;}
+    .machine.result-mode .reel-3 .reel-symbol{animation-delay:.16s;}
+    @keyframes landResult{from{transform:translateY(-12%) scale(.9)}to{transform:translateY(0) scale(1)}}
+    .symbol-alt{display:block;font-family:Georgia,serif;font-style:italic;font-size:clamp(30px,7.2vw,75px);font-weight:900;text-align:center;
+      -webkit-text-stroke:1px #ad7740;filter:drop-shadow(0 2px 1px #80572860);}
+    .symbol-seven{color:#a00724;text-shadow:2px 2px #f4cc74,3px 4px #95652c;}
+    .symbol-heart{color:#c20936;text-shadow:1px 2px #ffde8c,2px 3px #97521f;}
+    .symbol-diamond{color:#c48832;text-shadow:1px 2px #fef1c5,2px 3px #85551a;}
+    .result-banner{position:absolute;left:26.5%;top:65.8%;width:46%;height:4.15%;z-index:4;
+      display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none;
+      padding:0 .6%;border:1px solid #cd9e53;border-radius:999px;
+      color:#7d0821;background:linear-gradient(115deg,#fff3d7,#f4dbaf 46%,#fff5df 85%);
+      box-shadow:0 2px 3px #4d091b40,inset 0 1px #fff9e3;
+      font:bold clamp(12px,2.6vw,22px)/1 Georgia,serif;letter-spacing:.015em;
+      opacity:0;visibility:hidden;transform:scale(.9);transition:opacity .22s ease,transform .22s ease,visibility .22s;}
+    .machine.result-mode .result-banner{opacity:1;visibility:visible;transform:scale(1)}
+    .machine.cherry-win .result-banner{background:linear-gradient(115deg,#ffdda0,#fff7d8,#e7b85e);border-color:#ffdc80;}
+    .machine.cherry-win .confetti,.machine.match-win .confetti{animation:glowFlash .9s ease-out both}
+    @media(prefers-reduced-motion:reduce){.machine.result-mode .reel-symbol{animation:none}}
+</style>
+</head>
+<body>
+
+  <main class="jackpot" aria-label="Cherry Jackpot interactive invitation">
+    <div class="machine" id="machine">
+      <img class="machine-art" src="machine-art.png" alt="Cherry-red and gold slot machine artwork" loading="eager" decoding="async" onerror="this.style.visibility='hidden';document.getElementById('missing-art').style.display='flex';">
+      <div id="missing-art" class="missing-art" role="status" style="display:none">Artwork not found. Upload your slot machine PNG to this repository and name it <b>machine-art.png</b>.</div>
+      <div class="reel reel-1" aria-hidden="true"><div class="reel-symbol"></div></div>
+      <div class="reel reel-2" aria-hidden="true"><div class="reel-symbol"></div></div>
+      <div class="reel reel-3" aria-hidden="true"><div class="reel-symbol"></div></div>
+      <div class="win-panel" aria-hidden="true">
+        <div class="win-small">JACKPOT!</div>
+        <div class="win-headline"><span>YOU'RE</span><span>INVITED!</span></div>
+        <div class="win-ornament" aria-hidden="true">✦ ♥ ✦</div>
+      </div>
+      <div class="result-banner" id="result-banner" aria-hidden="true"></div>
+      <div class="confetti" aria-hidden="true"><span class="twinkle">✦</span><span class="twinkle">✦</span><span class="twinkle">✦</span><span class="twinkle">✦</span></div>
+      <button id="lever" class="lever-button" type="button" aria-label="Pull the lever to spin the reels and reveal your invitation">
+        <svg class="lever-svg" viewBox="0 0 200 470" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="stem" x1="0" x2="1"><stop offset="0" stop-color="#78401b"/><stop offset=".20" stop-color="#c88327"/><stop offset=".38" stop-color="#fff1b1"/><stop offset=".56" stop-color="#fff4bc"/><stop offset=".75" stop-color="#c88834"/><stop offset="1" stop-color="#8d4b18"/></linearGradient>
+            <radialGradient id="knob" cx=".28" cy=".2" r=".78"><stop offset="0" stop-color="#ff7783"/><stop offset=".24" stop-color="#e82a49"/><stop offset=".55" stop-color="#ab0722"/><stop offset=".84" stop-color="#720416"/><stop offset="1" stop-color="#4b0010"/></radialGradient>
+            <linearGradient id="gold-rim" x1="0" x2="1"><stop offset="0" stop-color="#7b411d"/><stop offset=".4" stop-color="#ffdc80"/><stop offset=".65" stop-color="#fff3b6"/><stop offset="1" stop-color="#9c611d"/></linearGradient>
+          </defs>
+          <g class="lever-shaft">
+            <rect x="91" y="125" width="26" height="260" rx="10" fill="url(#stem)" stroke="#8c571d" stroke-width="2"/>
+            <rect x="100" y="133" width="5" height="245" rx="3" fill="#fff7c8" opacity=".72"/>
+          </g>
+          <g class="lever-grip">
+            <ellipse cx="104" cy="132" rx="17" ry="7" fill="url(#gold-rim)" stroke="#a6732e" stroke-width="2"/>
+            <circle cx="104" cy="81" r="55" fill="url(#knob)" stroke="#7a061a" stroke-width="3"/>
+            <ellipse cx="86" cy="56" rx="25" ry="11" transform="rotate(-30 86 56)" fill="#fff3e9" opacity=".75"/>
+            <ellipse cx="122" cy="111" rx="24" ry="10" transform="rotate(-36 122 111)" fill="#ff6878" opacity=".22"/>
+          </g>
+        </svg>
+      </button>
+      <span class="sr-only" aria-live="polite" id="announce">Pull the lever to try your luck.</span>
+    </div>
+  </main>
+<script>
+(function(){
+  'use strict';
+  const TOTAL_SPIN_MS = 2000;
+  const REVEAL_HOLD_MS = 5000;
+  // Friendly, entertainment-only win frequencies for replay spins.
+  const CHERRY_JACKPOT_CHANCE = 0.18;
+  const OTHER_MATCH_CHANCE = 0.15;
+  const stage = document.getElementById('machine');
+  const lever = document.getElementById('lever');
+  const reels = Array.from(stage.querySelectorAll('.reel-symbol'));
+  const winner = stage.querySelector('.win-panel');
+  const banner = document.getElementById('result-banner');
+  const announce = document.getElementById('announce');
+  let spins = 0;
+  let spinning = false;
+  let spinInterval = null;
+  let finishTimer = null;
+  let resetTimer = null;
+  let startPos = null;
+  let plannedOutcome = null;
+
+  const cherry = `<svg viewBox="0 0 210 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <radialGradient id="c1" cx=".27" cy=".22" r=".8"><stop stop-color="#ff677a"/><stop offset=".26" stop-color="#da0d37"/><stop offset=".7" stop-color="#a70020"/><stop offset="1" stop-color="#65031b"/></radialGradient>
+  <linearGradient id="st" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe8a1"/><stop offset=".5" stop-color="#a36622"/><stop offset="1" stop-color="#f8df92"/></linearGradient></defs>
+  <path d="M108 76 Q83 26 26 68 Q62 90 109 80" fill="#2b661f" stroke="#c9a462" stroke-width="5"/>
+  <path d="M112 75 Q120 65 143 68" stroke="url(#st)" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M112 74 Q100 110 69 135 M112 74 Q121 118 151 138" fill="none" stroke="url(#st)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M103 90 Q73 69 61 100 L97 113Z M112 89 Q141 65 154 95 L123 115Z" fill="#a30d28" stroke="#f6b9aa" stroke-width="3"/>
+  <path d="M96 103 Q113 98 117 100" stroke="#e99ca1" stroke-width="7"/>
+  <circle cx="68" cy="157" r="38" fill="url(#c1)" stroke="#750520" stroke-width="3"/><circle cx="153" cy="157" r="38" fill="url(#c1)" stroke="#750520" stroke-width="3"/>
+  <ellipse cx="55" cy="139" rx="15" ry="8" fill="#fff0e0" opacity=".65" transform="rotate(-36 55 139)"/>
+  <ellipse cx="140" cy="139" rx="15" ry="8" fill="#fff0e0" opacity=".65" transform="rotate(-36 140 139)"/>
+  </svg>`;
+  const symbols = {
+    cherry,
+    seven:'<span class="symbol-alt symbol-seven">7</span>',
+    heart:'<span class="symbol-alt symbol-heart">♥</span>',
+    diamond:'<span class="symbol-alt symbol-diamond">◆</span>'
+  };
+  const symbolNames = Object.keys(symbols);
+  function randomItem(items){return items[Math.floor(Math.random()*items.length)];}
+  function setReels(keys){reels.forEach((element,index)=>{element.innerHTML=symbols[keys[index]];});}
+  function pickReplayOutcome(){
+    const chance=Math.random();
+    if(chance<CHERRY_JACKPOT_CHANCE){return ['cherry','cherry','cherry'];}
+    if(chance<CHERRY_JACKPOT_CHANCE+OTHER_MATCH_CHANCE){
+      const symbol=randomItem(['seven','heart','diamond']);
+      return [symbol,symbol,symbol];
+    }
+    // Deliberately mixed outcome: no accidental three-of-a-kind in this branch.
+    let selected;
+    do {selected=[randomItem(symbolNames),randomItem(symbolNames),randomItem(symbolNames)];}
+    while(selected[0]===selected[1]&&selected[1]===selected[2]);
+    return selected;
+  }
+  function hideResults(){
+    stage.classList.remove('won','result-mode','cherry-win','match-win');
+    winner.setAttribute('aria-hidden','true');
+    banner.setAttribute('aria-hidden','true');
+    banner.textContent='';
+  }
+  function startSpin(){
+    if(spinning)return;
+    clearInterval(spinInterval);clearTimeout(finishTimer);clearTimeout(resetTimer);
+    spins += 1;
+    plannedOutcome = spins===1 ? null : pickReplayOutcome();
+    spinning=true;
+    hideResults();
+    stage.classList.remove('pulling','spinning');
+    void stage.offsetHeight;
+    stage.classList.add('pulling','spinning');
+    lever.setAttribute('aria-disabled','true');
+    announce.textContent='Spinning!';
+    spinInterval=setInterval(()=>{
+      setReels([randomItem(symbolNames),randomItem(symbolNames),randomItem(symbolNames)]);
+    },80);
+    finishTimer=setTimeout(endSpin,TOTAL_SPIN_MS);
+  }
+  function endSpin(){
+    if(!spinning)return;
+    spinning=false;
+    clearInterval(spinInterval);clearTimeout(finishTimer);
+    stage.classList.remove('spinning','pulling');
+    lever.removeAttribute('aria-disabled');
+    if(spins===1){
+      setReels(['cherry','cherry','cherry']);
+      stage.classList.add('won');
+      winner.setAttribute('aria-hidden','false');
+      announce.textContent="You're invited! Pull the lever again for a surprise result.";
+    }else{
+      const outcome=plannedOutcome;
+      setReels(outcome);
+      let message;
+      if(outcome.every(symbol=>symbol==='cherry')){
+        message='CHERRY JACKPOT!';
+        stage.classList.add('cherry-win');
+      }else if(outcome.every(symbol=>symbol===outcome[0])){
+        message='LUCKY MATCH!';
+        stage.classList.add('match-win');
+      }else{
+        message='TRY AGAIN!';
+      }
+      banner.textContent=message;
+      banner.setAttribute('aria-hidden','false');
+      stage.classList.add('result-mode');
+      announce.textContent=message+' Pull the lever again to play.';
+    }
+    resetTimer=setTimeout(resetMachine,REVEAL_HOLD_MS);
+  }
+  function resetMachine(){
+    if(spinning)return;
+    hideResults();
+    stage.classList.remove('pulling','spinning');
+    setReels(['cherry','cherry','cherry']);
+    announce.textContent=spins===0?'Pull the lever to reveal your invitation.':'Ready for another spin!';
+  }
+  // Both tapping the ball and dragging downward trigger the same vertical lever pull.
+  lever.addEventListener('click',startSpin);
+  lever.addEventListener('pointerdown',event=>{startPos={id:event.pointerId,y:event.clientY};});
+  lever.addEventListener('pointermove',event=>{
+    if(startPos&&startPos.id===event.pointerId&&event.clientY-startPos.y>20){
+      startPos=null;startSpin();
+    }
+  });
+  ['pointerup','pointercancel','lostpointercapture'].forEach(eventName=>{
+    lever.addEventListener(eventName,()=>{startPos=null;});
+  });
+  setReels(['cherry','cherry','cherry']);
+})();
+</script>
+</body>
+</html>
